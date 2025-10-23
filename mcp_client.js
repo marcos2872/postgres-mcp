@@ -25,11 +25,11 @@ async function runClient() {
     console.log("Ferramentas disponíveis:", tools);
 
     const result = await client.callTool({
-      name: "contar_clientes",
+      name: "listar_escolas",
       arguments: {},
     });
 
-    console.log("Resultado da ferramenta 'contar_clientes':", result);
+    console.log("Resultado da ferramenta 'listar_usuarios':", result);
   } catch (error) {
     console.error("Erro ao chamar a ferramenta:", error);
   } finally {

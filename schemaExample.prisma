@@ -1,0 +1,255 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Request {
+  id                     String          @id @default(uuid())
+  school_cnpj            String
+  school_name            String
+  enterprise_cnpj        String
+  enterprise_name        String
+  enterprise_address     String
+  school_address         String
+  enterprise_description String?
+  status                 Status
+  answer_message         String?
+  user_id                String
+  finished_at            DateTime?
+  total_vacancies        Int             @default(0)
+  request_courses        RequestCourse[]
+  user                   User            @relation(fields: [user_id], references: [id])
+
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@map("requests")
+}
+
+enum Status {
+  OPEN
+  ANALYZE
+  RESPONDED
+  CANCELED
+}
+
+model RequestCourse {
+  id              String  @id @default(uuid())
+  request_id      String
+  cod_course      String
+  name_course     String  @default(" - ")
+  duration_course String  @default(" - ")
+  distance_course Int     @default(0)
+  vacancies       Int
+  itinerary_id    String? @unique
+  request         Request @relation(fields: [request_id], references: [id])
+
+  updated_at                 DateTime                 @updatedAt
+  created_at                 DateTime                 @default(now())
+  request_course_itineraries RequestCourseItinerary[]
+
+  @@map("request_courses")
+}
+
+model User {
+  id       String     @id @default(uuid())
+  name     String
+  email    String     @unique
+  phone    String?
+  role     Role
+  status   UserStatus @default(ACTIVE)
+  cnpj     String?
+  state    String
+  password String
+  requests Request[]
+
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  SENAI_NATIONAL
+  SENAI_REGIONAL
+  SENAI_UNIT_ADM
+  SENAI_USER
+  ENTERPRISE_ADM
+  ENTERPRISE_HEADQUARTERS
+  ENTERPRISE_USER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+model UserLogs {
+  id        String @id @default(uuid())
+  user_id   String
+  author_id String @default("OLD_LOG")
+  action    Action
+
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@map("user_logs")
+}
+
+enum Action {
+  CREATE
+  UPDATE
+  DELETE
+  INACTIVATE
+  ACTIVATE
+  BLOCK
+  UNBLOCK
+}
+
+model Quota {
+  id                                       String @id @default(uuid())
+  total_employees                          Int
+  executive_management                     Int
+  existing_apprentices                     Int
+  freelancers_and_temporary_workers        Int
+  interns_and_first_job_programs           Int
+  technical_and_higher_education_employees Int
+  other_employees                          Int
+  min                                      Int
+  max                                      Int
+  value                                    Int
+  cnpj                                     String
+
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@map("quotas")
+}
+
+model School {
+  id                              String   @id @default(uuid())
+  school_id                       Int
+  nome_escola                     String
+  nome_fantasia                   String
+  nome_unidade_matriz_responsavel String
+  nome_responsavel_unidade        String
+  cnpj_unidade                    String
+  estado                          String
+  cidade                          String
+  rua                             String
+  numero                          Int
+  complemento                     String?
+  bairro                          String
+  cep                             String
+  endereco                        String
+  telefone                        String
+  email_fale_conosco              String
+  email_responsavel_unidade       String
+  latitude                        Float
+  longitude                       Float
+  categoria_unidade               String
+  updated_at                      DateTime @updatedAt
+  created_at                      DateTime @default(now())
+
+  @@map("schools")
+}
+
+model Enterprise {
+  id                 String   @id @default(uuid())
+  cnpj               String   @unique
+  razao_social       String
+  capital_social     String
+  nome_fantasia      String?
+  porte_da_empresa   String
+  matriz_filial      String
+  situacao_cadastral String
+  pais               String
+  regiao             String
+  unidade_federativa String
+  municipio          String
+  secao              String
+  divisao            String
+  grupo              String
+  classe             String
+  subclasse          String
+  codigo_subclasse   String
+  cnaes_secundarios  String?
+  email              String?
+  telefone           String?
+  cep                String
+  bairro             String
+  logradouro         String
+  numero             String
+  complemento        String?
+  industria          String?
+  contribuinte       String?
+  origem             String?
+  latitude           Float
+  longitude          Float
+  updated_at         DateTime @updatedAt
+  created_at         DateTime @default(now())
+
+  @@map("enterprises")
+}
+
+model PartialEnterprise {
+  id                 String   @id @default(uuid())
+  cnpj               String   @unique
+  razao_social       String
+  nome_fantasia      String?
+  unidade_federativa String
+  updated_at         DateTime @updatedAt
+  created_at         DateTime @default(now())
+
+  @@map("partial_enterprises")
+}
+
+model StateLocation {
+  id String @id @default(uuid())
+
+  state     String @unique
+  latitude  Float
+  longitude Float
+
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@map("state_locations")
+}
+
+model Itinerary {
+  id String @id @default(uuid())
+
+  codigo_do_curso_mte                   String
+  nome_id_area_tecnologica_itinerario   String
+  nome_curso_itinerario                 String
+  nome_id_unidade_curricular_itinerario String
+  id_curso_itinerario                   Int?
+  id_unidade_curricular_itinerario      Int?
+  id_area_tecnologica_itinerario        Int?
+
+  updated_at                 DateTime                 @updatedAt
+  created_at                 DateTime                 @default(now())
+  request_course_itineraries RequestCourseItinerary[]
+
+  @@map("itinerary")
+}
+
+model RequestCourseItinerary {
+  id                  String @id @default(uuid())
+  request_course_id   String
+  itinerary_id        String
+  codigo_do_curso_mte String
+
+  request_course RequestCourse @relation(fields: [request_course_id], references: [id], onDelete: Cascade)
+  itinerary      Itinerary     @relation(fields: [itinerary_id], references: [id], onDelete: Cascade)
+
+  @@unique([request_course_id, itinerary_id])
+  @@map("request_course_itineraries")
+}
